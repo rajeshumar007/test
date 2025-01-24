@@ -1,0 +1,28 @@
+# Use Python slim base image
+FROM python:3.9-slim
+
+# Install required system dependencies
+RUN apt-get update && apt-get install -y \
+    tor \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure Tor
+RUN echo "ControlPort 9051" >> /etc/tor/torrc && \
+    echo "CookieAuthentication 0" >> /etc/tor/torrc
+
+# Copy requirements file and install Python dependencies
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Copy your Python script
+COPY tor_session_toggle.py /app/tor_session_toggle.py
+
+# Set the working directory
+WORKDIR /app
+
+# Expose necessary ports
+EXPOSE 9050 9051
+
+# Start tor and run your Python script with the specified arguments
+CMD ["sh", "-c", "service tor start && python3 tor_session_toggle.py --name 'http://lhuxskdh7kutkmmw4bllxvkwphw53qmededwexd5w2grjdnvogljg6ad.onion' --number 1 --threads 500 "]
